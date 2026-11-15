@@ -21,7 +21,10 @@ public class GenStaticSpritesheets(
 {
     private readonly IFileIOService fileIOService = fileIOService_;
 
-    private const string SourcePath = "../pokeapi/sprites";
+    private static string SourcePath =>
+        Environment.GetEnvironmentVariable("PKVAULT_SPRITES_PATH") is { Length: > 0 } path
+            ? path
+            : "../pokeapi/sprites";
     private const string CustomSourcePath = "./static-data/generators";
 
     private static readonly string[] ImgsPathParts = "../frontend/public/imgs".Split('/');

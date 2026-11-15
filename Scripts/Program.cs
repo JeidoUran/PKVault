@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using PKVault.Core;
 using Serilog;
 
@@ -35,6 +35,19 @@ else if (args.Contains("gen-migration"))
     var filename = args[args.IndexOf("gen-migration") + 1];
 
     await GenerateMigration.GenerateTrimmedCompatibleMigration(filename);
+}
+
+else if (args.Contains("gen-spritesheets"))
+{
+    Log.Information("-- Spritesheets generation from embedded static data --");
+
+    var staticDataService = sp.GetRequiredService<StaticDataService>();
+    var species = await staticDataService.GetStaticSpecies("en");
+    var others = await staticDataService.GetStaticOthers("en");
+    var generator = new GenStaticSpritesheets(
+        sp.GetRequiredService<IFileIOService>(), species, [.. others.Items.Items.Values]
+    );
+    await generator.GenerateFiles("../PKVault.Core/static-data/generated".Split('/'));
 }
 
 else if (args.Contains("gen-static-data"))

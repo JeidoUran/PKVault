@@ -1,0 +1,146 @@
+[
+  {
+    "source": "alpha_sapphire.png",
+    "target": "alpha-sapphire.png"
+  },
+  {
+    "source": "black.png",
+    "target": "black.png"
+  },
+  {
+    "source": "black_2.png",
+    "target": "black2.png"
+  },
+  {
+    "source": "blue.png",
+    "target": "blue.png"
+  },
+  {
+    "source": "brilliant_diamond.png",
+    "target": "brilliant-diamond.png"
+  },
+  {
+    "source": "crystal.png",
+    "target": "crystal.png"
+  },
+  {
+    "source": "diamond.png",
+    "target": "diamond.png"
+  },
+  {
+    "source": "emerald.png",
+    "target": "emerald.png"
+  },
+  {
+    "source": "firered.png",
+    "target": "fire-red.png"
+  },
+  {
+    "source": "go.png",
+    "target": "go.png"
+  },
+  {
+    "source": "heartgold.png",
+    "target": "heart-gold.png"
+  },
+  {
+    "source": "leafgreen.png",
+    "target": "leaf-green.png"
+  },
+  {
+    "source": "legends_arceus.png",
+    "target": "legend-arceus.png"
+  },
+  {
+    "source": "legends_za.png",
+    "target": "legend-za.png"
+  },
+  {
+    "source": "lets_go_eevee.png",
+    "target": "lets-go-evoli.png"
+  },
+  {
+    "source": "lets_go_pikachu.png",
+    "target": "lets-go-pikachu.png"
+  },
+  {
+    "source": "moon.png",
+    "target": "moon.png"
+  },
+  {
+    "source": "omega_ruby.png",
+    "target": "omega-ruby.png"
+  },
+  {
+    "source": "pearl.png",
+    "target": "pearl.png"
+  },
+  {
+    "source": "platinum.png",
+    "target": "platinum.png"
+  },
+  {
+    "source": "red.png",
+    "target": "red.png"
+  },
+  {
+    "source": "ruby.png",
+    "target": "ruby.png"
+  },
+  {
+    "source": "sapphire.png",
+    "target": "sapphire.png"
+  },
+  {
+    "source": "scarlet.png",
+    "target": "scarlet.png"
+  },
+  {
+    "source": "shield.png",
+    "target": "shield.png"
+  },
+  {
+    "source": "shining_pearl.png",
+    "target": "shining-pearl.png"
+  },
+  {
+    "source": "soulsilver.png",
+    "target": "soul-silver.png"
+  },
+  {
+    "source": "sun.png",
+    "target": "sun.png"
+  },
+  {
+    "source": "sword.png",
+    "target": "sword.png"
+  },
+  {
+    "source": "ultra_moon.png",
+    "target": "ultra-moon.png"
+  },
+  {
+    "source": "ultra_sun.png",
+    "target": "ultra-sun.png"
+  },
+  {
+    "source": "violet.png",
+    "target": "violet.png"
+  },
+  {
+    "source": "white.png",
+    "target": "white.png"
+  },
+  {
+    "source": "white_2.png",
+    "target": "white2.png"
+  },
+  {
+    "source": "x.png",
+    "target": "x.png"
+  },
+  {
+    "source": "y.png",
+    "target": "y.png"
+  }
+]
