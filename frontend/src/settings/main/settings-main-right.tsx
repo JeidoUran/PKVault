@@ -1,4 +1,4 @@
-import { Card } from '@mantine/core';
+import { Card, Textarea } from '@mantine/core';
 import type React from "react";
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useSettingsGet } from '../../data/sdk/settings/settings.gen';
@@ -17,6 +17,8 @@ export const SettingsMainRight: React.FC = () => {
     const [ saveGlobs ] = useWatch({ control: form.control, name: [ 'savE_GLOBS' ] });
 
     return <Card>
+        <Textarea label={t('home.settings')} description={t('home.settings-description')} autosize minRows={2}
+            {...form.register('homE_PATHS')} disabled={!settings?.canUpdateSettings} mb='md' />
         <GlobsInputList
             labelList={t('settings.form.saves')}
             labelAddFile={t('settings.form.saves.add-file')}

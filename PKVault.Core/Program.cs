@@ -83,6 +83,7 @@ public class Program
         services.AddSingleton<StorageQueryService>();
         services.AddSingleton<ActionService>();
         services.AddSingleton<DexService>();
+        services.AddSingleton<HomeService>();
         services.AddSingleton<DexDataService>();
         services.AddSingleton<WarningsService>();
         services.AddSingleton<BackupService>();
@@ -137,6 +138,7 @@ public class Program
         services.AddScoped<SaveInfosController>();
         services.AddScoped<StorageController>();
         services.AddScoped<DexController>();
+        services.AddScoped<HomeController>();
         services.AddScoped<SettingsController>();
         services.AddScoped<WarningsController>();
         services.AddScoped<StaticDataController>();

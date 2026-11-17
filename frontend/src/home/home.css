@@ -1,0 +1,14 @@
+.home-content { overflow-y: auto; scrollbar-gutter: stable; }
+.home-layout { display: grid; grid-template-columns: minmax(350px, 1fr) minmax(320px, 0.8fr); gap: 1rem; align-items: start; }
+.home-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; padding: 10px; background: #080c10; border-radius: 6px; }
+.home-slot { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 90px; padding: 6px 2px; background: #181e24; border: 1px solid transparent; border-radius: 5px; color: #e5edf2; cursor: pointer; font: inherit; }
+.home-slot:hover { background: #24303a; }
+.home-slot[aria-pressed='true'] { border-color: #3bc9db; background: #14333d; }
+.home-slot:focus-visible { outline: 2px solid #3bc9db; outline-offset: 1px; }
+.home-slot span { font-size: 0.8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-slot small { font-size: 0.7rem; color: #9eacb5; }
+.home-shiny { color: #ffd43b; }
+.home-empty { opacity: 0.4; cursor: default; }
+.home-details { min-width: 0; }
+.home-hex { max-height: 180px; overflow: auto; font-size: 0.7rem; }
+@media (width < 900px) { .home-layout { grid-template-columns: 1fr; } }

@@ -8,7 +8,7 @@ namespace PKVault.Core;
  */
 public class DexService(
     IServiceProvider sp,
-    StaticDataService staticDataService, ISavesLoadersService savesLoadersService
+    StaticDataService staticDataService, ISavesLoadersService savesLoadersService, HomeService homeService
 )
 {
     public async Task<Dictionary<ushort, Dictionary<uint, DexItemDTO>>> GetDex(HashSet<ushort>? speciesSet)
@@ -49,6 +49,9 @@ public class DexService(
             var success = service != null && (await service.UpdateDexWithSave(dex, staticSpecies, speciesSet));
             // time();
         }
+
+        if (saveIds.Contains(FakeSaveFile.Default.ID32))
+            await homeService.AddToDex(dex, speciesSet, staticDataService);
 
         return dex;
     }

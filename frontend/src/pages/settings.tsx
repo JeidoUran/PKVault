@@ -19,14 +19,16 @@ import { UIButton } from '../ui/form/button/ui-button';
 import { UISettingsContent } from '../ui/settings/ui-settings-content';
 import { switchUtil } from '../util/switch-util';
 
-export type SettingsFormData = Omit<SettingsMutableDTO, 'savE_GLOBS' | 'pkM_EXTERNAL_GLOBS'> & {
+export type SettingsFormData = Omit<SettingsMutableDTO, 'savE_GLOBS' | 'pkM_EXTERNAL_GLOBS' | 'homE_PATHS'> & {
   savE_GLOBS: string;
   pkM_EXTERNAL_GLOBS: string;
+  homE_PATHS: string;
 };
 
 const settingsToFormData = (settingsMutable: SettingsMutableDTO) => ({
   ...settingsMutable,
   savE_GLOBS: settingsMutable.savE_GLOBS.join('\n'),
+  homE_PATHS: settingsMutable.homE_PATHS?.join('\n') ?? '',
   pkM_EXTERNAL_GLOBS: settingsMutable.pkM_EXTERNAL_GLOBS?.join('\n') ?? ''
 });
 
@@ -63,6 +65,7 @@ export const SettingsPage: React.FC = withErrorCatcher('default', () => {
       data: {
         ...data,
         savE_GLOBS: data.savE_GLOBS.split('\n').map(value => value.trim()).filter(Boolean),
+        homE_PATHS: data.homE_PATHS.split('\n').map(value => value.trim()).filter(Boolean),
         pkM_EXTERNAL_GLOBS: data.pkM_EXTERNAL_GLOBS.split('\n').map(value => value.trim()).filter(Boolean)
       },
     });

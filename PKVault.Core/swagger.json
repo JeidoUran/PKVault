@@ -300,6 +300,182 @@
         }
       }
     },
+    "/api/home": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HomeCollectionDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/home/pokemon": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_GetPokemon",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "snapshotId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "entryId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "core"
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomePokemonDetailsDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/home/rescan": {
+      "post": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_Rescan",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HomeCollectionDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/home/selection": {
+      "post": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_Select",
+        "requestBody": {
+          "x-name": "input",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeSelectionInput"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeCollectionDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/home/snapshot": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_GetSnapshot",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "snapshotId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeInventoryDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/save-infos": {
       "get": {
         "tags": [
@@ -4233,6 +4409,12 @@
           },
           "language": {
             "type": "string"
+          },
+          "homE_PATHS": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4650,6 +4832,396 @@
             "type": "array",
             "items": {
               "type": "integer"
+            }
+          }
+        }
+      },
+      "HomeCollectionDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "sourceId",
+          "snapshots",
+          "autoSelectLatest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "integer"
+          },
+          "activeSnapshotId": {
+            "type": "string"
+          },
+          "snapshots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomeSnapshotDTO"
+            }
+          },
+          "error": {
+            "type": "string"
+          },
+          "autoSelectLatest": {
+            "type": "boolean"
+          }
+        }
+      },
+      "HomeSnapshotDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "datePrecision",
+          "isValid",
+          "pokemonCount",
+          "boxCount",
+          "shinyCount",
+          "speciesCount",
+          "exactSlots",
+          "fingerprint"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "type": "string"
+          },
+          "datePrecision": {
+            "type": "string"
+          },
+          "isValid": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "pokemonCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boxCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shinyCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "speciesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "exactSlots": {
+            "type": "boolean"
+          },
+          "fingerprint": {
+            "type": "string"
+          }
+        }
+      },
+      "HomePokemonDetailsDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sha256",
+          "sourcePath",
+          "availableViews",
+          "view"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sourcePath": {
+            "type": "string"
+          },
+          "availableViews": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "view": {
+            "$ref": "#/components/schemas/HomeViewDTO"
+          }
+        }
+      },
+      "HomeViewDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "label",
+          "isProjection",
+          "context",
+          "species",
+          "form",
+          "nickname",
+          "gender",
+          "isShiny",
+          "originalTrainer",
+          "tid",
+          "sid",
+          "originGame",
+          "language",
+          "tracker",
+          "pid",
+          "nature",
+          "iVs",
+          "blockHex"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isProjection": {
+            "type": "boolean"
+          },
+          "context": {
+            "$ref": "#/components/schemas/EntityContext"
+          },
+          "species": {
+            "type": "integer"
+          },
+          "form": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "isShiny": {
+            "type": "boolean"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "originalTrainer": {
+            "type": "string"
+          },
+          "tid": {
+            "type": "integer"
+          },
+          "sid": {
+            "type": "integer"
+          },
+          "originGame": {
+            "$ref": "#/components/schemas/GameVersion"
+          },
+          "language": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tracker": {
+            "type": "string"
+          },
+          "pid": {
+            "type": "integer"
+          },
+          "nature": {
+            "type": "string"
+          },
+          "iVs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "eVs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "ability": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "heldItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "metDate": {
+            "type": "string"
+          },
+          "metLocation": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blockHex": {
+            "type": "string"
+          }
+        }
+      },
+      "HomeSelectionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "collectionId",
+          "snapshotId"
+        ],
+        "properties": {
+          "collectionId": {
+            "type": "string"
+          },
+          "snapshotId": {
+            "type": "string"
+          }
+        }
+      },
+      "HomeInventoryDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "collectionId",
+          "sourceId",
+          "snapshot",
+          "boxes"
+        ],
+        "properties": {
+          "collectionId": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "integer"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/HomeSnapshotDTO"
+          },
+          "boxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomeBoxDTO"
+            }
+          }
+        }
+      },
+      "HomeBoxDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "order",
+          "exactSlots",
+          "pokemon"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "exactSlots": {
+            "type": "boolean"
+          },
+          "pokemon": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomePokemonDTO"
+            }
+          }
+        }
+      },
+      "HomePokemonDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "box",
+          "displayIndex",
+          "species",
+          "form",
+          "nickname",
+          "gender",
+          "isShiny",
+          "isEgg",
+          "tracker",
+          "spriteContext",
+          "views"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "box": {
+            "type": "string"
+          },
+          "displayIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "slotIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "species": {
+            "type": "integer"
+          },
+          "form": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "isShiny": {
+            "type": "boolean"
+          },
+          "isEgg": {
+            "type": "boolean"
+          },
+          "tracker": {
+            "type": "string"
+          },
+          "spriteContext": {
+            "$ref": "#/components/schemas/EntityContext"
+          },
+          "views": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }

@@ -78,7 +78,8 @@ public record SettingsMutableDTO(
     bool SKIP_LEGALITY_CHECKS,
     Dictionary<uint, GameVersion>? SAVE_VERSION_OVERRIDES = null,
     Dictionary<uint, string>? SAVE_PATH_OVERRIDES = null,
-    string LANGUAGE = "en"
+    string LANGUAGE = "en",
+    string[]? HOME_PATHS = null
 );
 
 public enum RuntimeSystem

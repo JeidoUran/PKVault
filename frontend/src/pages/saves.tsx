@@ -1,3 +1,4 @@
+import { HomeSummary } from '../home/home-summary';
 import { Badge, Button, Card, Divider, EmptyState, Group, Tooltip } from '@mantine/core';
 import { DownloadIcon, FolderIcon, FolderSearchIcon, PackageOpenIcon, TrashIcon, TriangleAlertIcon } from 'lucide-react';
 import type React from "react";
@@ -154,6 +155,8 @@ export const SavesPage: React.FC = withErrorCatcher('default', () => {
           </Card.Section>,
         ];
       })}
+
+      <HomeSummary />
 
       <Card.Section inheritPadding withBorder py='inherit'>
         <Group justify='center'>

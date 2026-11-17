@@ -1,3 +1,4 @@
+import { HomeOwned } from '../../../home/home-owned';
 import { Group } from '@mantine/core';
 import type React from 'react';
 import { HistoryContext } from '../../../context/history-context';
@@ -38,6 +39,7 @@ export const PokedexDetailsOwned: React.FC<PokedexDetailsOwnedProps> = ({ saveId
         speciesSize='sm'
         itemSize='1lh'
     >
+        {!saveId && <HomeOwned species={species} />}
         {pkmsQuery.isPending && <UIStorageItemBase loading>
             <UISpeciesImgSkeleton />
         </UIStorageItemBase>}

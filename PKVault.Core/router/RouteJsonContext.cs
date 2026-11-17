@@ -6,6 +6,11 @@ using PKHeX.Core;
 
 namespace PKVault.Core;
 
+[JsonSerializable(typeof(HomeCollectionDTO[]))]
+[JsonSerializable(typeof(HomeCollectionDTO))]
+[JsonSerializable(typeof(HomeInventoryDTO))]
+[JsonSerializable(typeof(HomePokemonDetailsDTO))]
+[JsonSerializable(typeof(HomeSelectionInput))]
 [JsonSerializable(typeof(SettingsDTO))]
 [JsonSerializable(typeof(DirectoryContent))]
 [JsonSerializable(typeof(WarningsDTO))]

@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { homeRescan } from '../data/sdk/home/home.gen';
 import { Group, Tooltip } from '@mantine/core';
 import { useMatches } from '@tanstack/react-router';
 import { InfoIcon, RefreshCwIcon } from 'lucide-react';
@@ -19,6 +21,7 @@ type RemoveFirstChar<V extends string> = V extends `${string}${infer Rest}` ? Re
 
 export const Header: React.FC = () => {
     const matches = useMatches();
+    const queryClient = useQueryClient();
 
     const { t } = useTranslate();
 
@@ -62,6 +65,8 @@ export const Header: React.FC = () => {
                 {t('header.dex')}
             </UIHeaderItem>
 
+            <UIHeaderItem id={'home' satisfies HeaderValue} to='/home' selected={value === 'home'} label='Pokémon HOME'>HOME</UIHeaderItem>
+
             <Tooltip
                 multiline
                 label={[
@@ -72,7 +77,7 @@ export const Header: React.FC = () => {
                 <UIButton
                     name='refresh-data'
                     controlLabel={t('header.reload.controls-label')}
-                    onClick={() => savesScanMutation.mutateAsync()}
+                    onClick={async () => { await savesScanMutation.mutateAsync(); await homeRescan(); await queryClient.invalidateQueries(); }}
                     loading={savesScanMutation.isPending}
                     disabled={!settings?.canScanSaves}
                     noLabelTabletScreen
@@ -127,6 +132,7 @@ export const Header: React.FC = () => {
                 />
             </Group>,
             'saves': () => null,
+            'home': () => null,
             'settings': () => <SettingsSubMenu />,
             '': () => null,
         })()}

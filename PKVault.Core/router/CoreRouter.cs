@@ -31,6 +31,7 @@ public partial class CoreRouter
         typeof(SaveInfosController),
         typeof(StorageController),
         typeof(DexController),
+        typeof(HomeController),
         typeof(SettingsController),
         typeof(WarningsController),
         typeof(StaticDataController),

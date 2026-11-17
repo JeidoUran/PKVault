@@ -108,7 +108,8 @@ public class SettingsService(IServiceProvider sp) : ISettingsService
             || currentSettingsMutable.STORAGE_PATH != updatedSettingsMutable.STORAGE_PATH
             || currentSettingsMutable.BACKUP_PATH != updatedSettingsMutable.BACKUP_PATH
             || GetArrayChecksum(currentSettingsMutable.SAVE_GLOBS) != GetArrayChecksum(updatedSettingsMutable.SAVE_GLOBS)
-            || GetArrayChecksum(currentSettingsMutable.PKM_EXTERNAL_GLOBS) != GetArrayChecksum(updatedSettingsMutable.PKM_EXTERNAL_GLOBS);
+            || GetArrayChecksum(currentSettingsMutable.PKM_EXTERNAL_GLOBS) != GetArrayChecksum(updatedSettingsMutable.PKM_EXTERNAL_GLOBS)
+            || GetArrayChecksum(currentSettingsMutable.HOME_PATHS) != GetArrayChecksum(updatedSettingsMutable.HOME_PATHS);
 
         if (hasPathChanges)
         {
@@ -295,7 +296,8 @@ public class SettingsService(IServiceProvider sp) : ISettingsService
             SourceProvider: sourceProvider,
             FlatpakMigrated: FlatpakMigrated,
             Version,
-            PkhexVersion: Assembly.GetAssembly(typeof(PKHeX.Core.PKM))?.GetName().Version?.ToString(3) ?? "",
+            PkhexVersion: typeof(PKHeX.Core.PKM).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? typeof(PKHeX.Core.PKM).Assembly.GetName().Version?.ToString(3) ?? "",
             AppDirectory: MatcherUtil.NormalizePath(Directory.GetCurrentDirectory()),
             SettingsPath: FilePath,
             UserId: "", // should be defined later
