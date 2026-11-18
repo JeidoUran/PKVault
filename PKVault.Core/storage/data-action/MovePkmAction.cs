@@ -116,8 +116,9 @@ public class MovePkmAction(
         }
 
         var saveLoaders = savesLoadersService.GetLoadersRequired((uint)saveId);
-        var saveDto = saveLoaders.Pkms.GetDto(pkmId);
-        return (saveDto!.BoxId.ToString(), saveDto.BoxSlot);
+        var saveDto = saveLoaders.Pkms.GetDto(pkmId)
+            ?? throw new KeyNotFoundException("The Pokémon is no longer in this save.");
+        return (saveDto.BoxId.ToString(), saveDto.BoxSlot);
     }
 
     private async Task<DataActionPayload> MainToMain(MovePkmActionInput input, string pkmVariantId, BoxDTO sourceBox, BoxDTO targetBox, int targetBoxSlot)

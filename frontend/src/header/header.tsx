@@ -1,11 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { homeRescan } from '../data/sdk/home/home.gen';
 import { Group, Tooltip } from '@mantine/core';
 import { useMatches } from '@tanstack/react-router';
 import { InfoIcon, RefreshCwIcon } from 'lucide-react';
 import type React from 'react';
 import { useSaveInfosScan } from '../data/sdk/save-infos/save-infos.gen';
 import { useSettingsGet } from '../data/sdk/settings/settings.gen';
+import { refreshHomeQueries } from '../home/refresh-home-queries';
+import { homeRescan } from '../data/sdk/home/home.gen';
 import type { DocsGenEnSlugs } from '../help/hooks/use-help-navigate';
 import { NotificationButton } from '../notification/notification-button';
 import { SettingsSubMenu } from '../settings/settings-sub-menu';
@@ -77,7 +78,7 @@ export const Header: React.FC = () => {
                 <UIButton
                     name='refresh-data'
                     controlLabel={t('header.reload.controls-label')}
-                    onClick={async () => { await savesScanMutation.mutateAsync(); await homeRescan(); await queryClient.invalidateQueries(); }}
+                    onClick={async () => { await savesScanMutation.mutateAsync(); await homeRescan(); await refreshHomeQueries(queryClient); }}
                     loading={savesScanMutation.isPending}
                     disabled={!settings?.canScanSaves}
                     noLabelTabletScreen
@@ -132,7 +133,7 @@ export const Header: React.FC = () => {
                 />
             </Group>,
             'saves': () => null,
-            'home': () => null,
+            'home': () => <UISpriteSizingButton localStorageKey='home-sprite-size' ml='auto' />,
             'settings': () => <SettingsSubMenu />,
             '': () => null,
         })()}

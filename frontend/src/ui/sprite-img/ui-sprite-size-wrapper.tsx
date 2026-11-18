@@ -19,17 +19,9 @@ const switchIfEnum = function <V extends string>(v: V | number | undefined, o: R
 };
 
 export function UISpriteSizeWrapper<T extends ReactTag>({ component: Component, speciesSize, itemSize, style, ...rest }: UISpriteSizeWrapperProps<T>) {
-    // if pixel ratio is not an integer (ex: 1.25), pixelated rendering looks bad
-    const irregularPixelRatioRendering = devicePixelRatio.toString().split('.')[ 1 ]
-        ? 'auto'
-        : undefined;
-
-    const getSizeNumberValue = (size: number): React.CSSProperties[ 'imageRendering' ] => {
-        if (size >= 1)
-            return irregularPixelRatioRendering;
-
-        return 'auto';
-    };
+    // A source pixel maps cleanly to the screen at integer device-pixel sizes.
+    const getImageRendering = (multiplier: number): React.CSSProperties['imageRendering'] =>
+        Number.isInteger(multiplier * devicePixelRatio) ? undefined : 'auto';
 
     return <Component
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,13 +34,13 @@ export function UISpriteSizeWrapper<T extends ReactTag>({ component: Component, 
                 lg: 2,
             }),
             '--sprite-species-rendering': typeof speciesSize === 'number'
-                ? getSizeNumberValue(speciesSize)
+                ? getImageRendering(speciesSize)
                 : typeof speciesSize === 'string'
                     ? switchUtil(speciesSize, {
                         xs: 'auto',
                         sm: 'auto',
-                        md: irregularPixelRatioRendering,
-                        lg: undefined,
+                        md: getImageRendering(1),
+                        lg: getImageRendering(2),
                     })
                     : undefined,
 
@@ -58,12 +50,12 @@ export function UISpriteSizeWrapper<T extends ReactTag>({ component: Component, 
                 lg: 2,
             }),
             '--sprite-item-rendering': typeof itemSize === 'number'
-                ? getSizeNumberValue(itemSize)
+                ? getImageRendering(itemSize)
                 : typeof itemSize === 'string'
                     ? switchIfEnum(itemSize, {
                         '1lh': 'auto',
-                        md: irregularPixelRatioRendering,
-                        lg: undefined,
+                        md: getImageRendering(1),
+                        lg: getImageRendering(2),
                     })
                     : undefined,
 

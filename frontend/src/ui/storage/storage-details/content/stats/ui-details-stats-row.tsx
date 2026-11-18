@@ -10,8 +10,8 @@ export type UIDetailsStatName = keyof typeof baseTheme.other.stats;
 
 export type UIDetailsStatsRowProps = {
     stat: UIDetailsStatName;
-    value: number;
-    level: number;
+    value?: number;
+    level?: number;
     natureEffect?: 'increase' | 'decrease';
     maxIv?: number;
     maxEv?: number;
@@ -36,8 +36,8 @@ export const UIDetailsStatsRow: React.FC<UIDetailsStatsRowProps> = ({ stat, valu
     const maxStats = 400;
     const minStats = 5;
 
-    const maxStatsRatio = minStats + (maxStats - minStats) * (level / 100);
-    const progressValue = value / maxStatsRatio * 100;
+    const maxStatsRatio = minStats + (maxStats - minStats) * ((level ?? 1) / 100);
+    const progressValue = (value ?? 0) / maxStatsRatio * 100;
 
     return <Table.Tr>
         <Table.Th>
@@ -47,6 +47,7 @@ export const UIDetailsStatsRow: React.FC<UIDetailsStatsRowProps> = ({ stat, valu
                 {natureEffect === 'increase' && <ChevronUpIcon strokeWidth={3} color='var(--mantine-color-red-filled)' style={{ marginLeft: 'auto' }} />}
             </Group>
         </Table.Th>
+        {value !== undefined && <>
         <Table.Td>
             <Progress
                 value={progressValue}
@@ -57,6 +58,7 @@ export const UIDetailsStatsRow: React.FC<UIDetailsStatsRowProps> = ({ stat, valu
         <Table.Td>
             {value}
         </Table.Td>
+        </>}
         {iv !== undefined && maxIv !== undefined && <Table.Td>
             <Box className={classes.ivEv}>
                 {iv}

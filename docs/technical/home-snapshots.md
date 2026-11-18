@@ -64,9 +64,10 @@ observations captured at different times can describe the same individual in
 different places. No legality verdict is shown by this initial HOME inspector.
 Game saves continue using the pinned PKHeX legality engine normally.
 
-Endpoints: `GET /api/home`, `GET /api/home/snapshot`, `GET /api/home/pokemon`,
-`POST /api/home/selection`, `POST /api/home/rescan`. The last two modify application
-selection/cache only. There is no HOME source edit, delete, transfer or export route.
+Read endpoints are `GET /api/home`, `GET /api/home/snapshot`, `GET /api/home/pokemon`,
+and `GET /api/home/download`. Download packages the original files and any original
+manifest into a ZIP on request. `POST /api/home/selection` and `POST /api/home/rescan`
+modify the app selection and cache only.
 Selection requires no pending game/storage actions. This is local software with no
 authentication added by this change; do not expose the development server publicly.
 

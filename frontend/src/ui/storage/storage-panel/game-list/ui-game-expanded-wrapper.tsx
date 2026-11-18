@@ -21,6 +21,7 @@ export type UIGameExpandedWrapperProps = {
     disabled?: boolean;
     onSelect?: () => unknown;
     editDropdown?: React.ReactNode;
+    editLabel?: string;
     hasDuplicates?: boolean;
     actions?: React.ReactNode;
 
@@ -36,7 +37,7 @@ export type UIGameExpandedWrapperProps = {
 
 export const UIGameExpandedWrapper: React.FC<UIGameExpandedWrapperProps> = ({
     id, label, imgSrc, secondaryLine, tertiaryLine, fourthLine, path, missingFile,
-    selected, loading: loadingInner, disabled, onSelect: onSelectInner, editDropdown, hasDuplicates, actions,
+    selected, loading: loadingInner, disabled, onSelect: onSelectInner, editDropdown, editLabel, hasDuplicates, actions,
 }) => {
     const { t } = useTranslate();
 
@@ -59,7 +60,7 @@ export const UIGameExpandedWrapper: React.FC<UIGameExpandedWrapperProps> = ({
             }),
             !!editDropdown && {
                 name: 'edit' as const,
-                label: t('storage.actions.edit'),
+                label: editLabel ?? t('storage.actions.edit'),
                 triggers: {
                     mouse: {
                         type: 'mouse',
@@ -98,6 +99,8 @@ export const UIGameExpandedWrapper: React.FC<UIGameExpandedWrapperProps> = ({
                             color='blue'
                             size='compact-xs'
                             fullWidth
+                            aria-label={editLabel ?? t('storage.actions.edit')}
+                            title={editLabel}
                             {...controlProps('edit')}
                         >
                             <Group wrap='nowrap' gap='sm'>

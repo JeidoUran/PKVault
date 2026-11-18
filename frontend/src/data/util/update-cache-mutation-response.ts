@@ -15,7 +15,8 @@ import {
     getStorageGetBoxesQueryKey,
     getStorageGetInventoryItemsQueryKey,
     getStorageGetMainBanksQueryKey,
-    getStorageGetSavePkmsQueryKey,
+    getStorageGetPkmAvailableMovesQueryKey,
+    getStorageGetPkmsLegalityQueryKey,
     type storageGetActionsResponseSuccess,
     type storageGetBoxesResponseSuccess,
     type storageGetInventoryItemsResponseSuccess
@@ -59,6 +60,24 @@ export const updateCacheMutationResponse = (client: QueryClient, data: unknown) 
         saveInfos,
         backups,
     } = data.data;
+
+    // Inactive views do not refetch on mount when they still have cached data.
+    // Clear transient save data after the server restores or replaces its session.
+    const saveReset = invalidateAllSaves ? client.resetQueries({
+        predicate: ({ queryKey: [ route, params ] }) => {
+            if (typeof route !== 'string')
+                return false;
+            if (/^\/api\/storage\/save\/[1-9]\d*\/pkm$/.test(route))
+                return true;
+            if (route === getStorageGetPkmsLegalityQueryKey()[0])
+                return typeof params === 'number' && params > 0;
+            return (route === getStorageGetBoxesQueryKey()[0]
+                || route === getStorageGetInventoryItemsQueryKey()[0]
+                || route === getStorageGetPkmAvailableMovesQueryKey()[0])
+                && !!params && typeof params === 'object' && 'saveId' in params
+                && typeof params.saveId === 'number' && params.saveId > 0;
+        },
+    }) : undefined;
 
     if (settings) {
         client.setQueryData(getSettingsGetQueryKey(), {
@@ -114,35 +133,7 @@ export const updateCacheMutationResponse = (client: QueryClient, data: unknown) 
         applyPkmLegalities(client, 0, mainPkmLegalities.data ?? {});
     }
 
-    if (invalidateAllSaves) {
-        const [ saveBoxStart, saveBoxEnd ] = getStorageGetBoxesQueryKey({ saveId: -999 })[ 0 ].split('-999');
-        const [ savePkmStart, savePkmEnd ] = getStorageGetSavePkmsQueryKey(-999)[ 0 ].split('-999');
-
-        const saveQueries = client.getQueryCache().findAll({
-            predicate: query => {
-                if (!Array.isArray(query.queryKey) || typeof query.queryKey[ 0 ] !== 'string') {
-                    return false;
-                }
-
-                const queryKeyValue = query.queryKey[ 0 ];
-
-                const isSaveBoxQuery = queryKeyValue.startsWith(saveBoxStart!) && queryKeyValue.endsWith(saveBoxEnd!);
-                const isSavePkmQuery = queryKeyValue.startsWith(savePkmStart!) && queryKeyValue.endsWith(savePkmEnd!);
-
-                const saveId = +(isSaveBoxQuery
-                    ? queryKeyValue.slice(saveBoxStart!.length, -saveBoxEnd!.length)
-                    : isSavePkmQuery
-                        ? queryKeyValue.slice(savePkmStart!.length, -savePkmEnd!.length)
-                        : 0);
-
-                return saveId !== 0;
-            },
-        });
-
-        for (const query of saveQueries) {
-            client.invalidateQueries({ queryKey: query.queryKey });
-        }
-    } else if (saves) {
+    if (!invalidateAllSaves && saves) {
         saves.forEach(saveData => {
             if (saveData.saveBoxes) {
                 client.setQueryData(getStorageGetBoxesQueryKey({ saveId: saveData.saveId }), {
@@ -201,6 +192,7 @@ export const updateCacheMutationResponse = (client: QueryClient, data: unknown) 
             data: backups,
         } satisfies backupGetAllResponseSuccess);
     }
+    return saveReset;
 };
 
 const isResponse = (obj: unknown): obj is ResponseBack => responseBackSchema.safeParse(obj).success;

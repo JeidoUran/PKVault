@@ -22,7 +22,7 @@ export const DataProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
                         onSettled: async (data, error) => {
                             errorsOnMutationResponse(data, error);
 
-                            updateCacheMutationResponse(client, data);
+                            await updateCacheMutationResponse(client, data);
                         },
                     },
                 },

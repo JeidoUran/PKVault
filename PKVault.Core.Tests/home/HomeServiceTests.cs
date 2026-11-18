@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Moq;
@@ -81,9 +82,36 @@ public sealed class HomeServiceTests : IDisposable
         Assert.False(inventory.Snapshot.ExactSlots);
         var detail = service.GetPokemon("test-home", "2026-11-12", p.Id, "core");
         Assert.Equal((ushort)25, detail.View.Species);
-        Assert.Null(detail.View.Level);
+        Assert.Equal((byte?)21, p.Level);
+        Assert.Equal((int?)21, detail.View.Level);
+        Assert.Null(detail.View.Ball);
+        Assert.Null(detail.View.Stats);
+        Assert.Null(detail.View.Moves);
+        Assert.Equal((byte)1, detail.View.Ribbons?["RibbonBestFriends"]);
         Assert.Throws<ArgumentException>(() => service.GetPokemon("test-home", "2026-11-12", p.Id, "PK9"));
         Assert.Equal(original, File.ReadAllBytes(file));
+    }
+
+    [Fact]
+    public void DownloadKeepsTheSelectedManifestAndOriginalBytes()
+    {
+        var file = Snapshot("2026-11-12");
+        Snapshot("2026-11-17T120000Z", species: 26);
+        var manifest = Path.Combine(root, "2026-11-12", "manifest-sha256.json");
+        var response = service.Download("test-home", "2026-11-12");
+        Assert.Contains("2026-11-12", response.File.FileName);
+        using var archive = new ZipArchive(response.File.Stream, ZipArchiveMode.Read);
+        Assert.Equal(2, archive.Entries.Count);
+        Assert.Equal(File.ReadAllBytes(file), ReadEntry("Box 001/test.ph4"));
+        Assert.Equal(File.ReadAllBytes(manifest), ReadEntry("manifest-sha256.json"));
+
+        byte[] ReadEntry(string path)
+        {
+            using var buffer = new MemoryStream();
+            using var entry = (archive.GetEntry(path) ?? throw new InvalidDataException(path)).Open();
+            entry.CopyTo(buffer);
+            return buffer.ToArray();
+        }
     }
 
     [Fact]
@@ -145,6 +173,8 @@ public sealed class HomeServiceTests : IDisposable
     {
         var dir=Path.Combine(root,id,"Box 001"); Directory.CreateDirectory(dir);
         var pokemon=new PKH { Species=species, Nickname="TEST", OriginalTrainerName="TEST", Tracker=123, Version=GameVersion.GO, Language=2 };
+        pokemon.EXP = Experience.GetEXP(21, PersonalTable.SV[species].EXPGrowth);
+        pokemon.Core.RibbonBestFriends = true;
         if(withGameViews)
         {
             pokemon=PKH.ConvertFromPKM(new PK9 { Species=species, Nickname="TEST", OriginalTrainerName="TEST", Version=GameVersion.VL, Language=2 });

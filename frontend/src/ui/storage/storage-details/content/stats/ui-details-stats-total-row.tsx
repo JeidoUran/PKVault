@@ -4,8 +4,8 @@ import { useTranslate } from '../../../../../translate/i18n';
 import classes from './ui-details-content-stats.module.css';
 
 export type UIDetailsStatsTotalRowProps = {
-    total: number;
-    level: number;
+    total?: number;
+    level?: number;
     maxIv?: number;
     maxEvTotal?: number;
     iv?: number;
@@ -18,8 +18,8 @@ export const UIDetailsStatsTotalRow: React.FC<UIDetailsStatsTotalRowProps> = ({ 
     const maxStats = 400 * 6;
     const minStats = 5 * 6;
 
-    const maxStatsRatio = minStats + (maxStats - minStats) * (level / 100);
-    const progressValue = total / maxStatsRatio * 100;
+    const maxStatsRatio = minStats + (maxStats - minStats) * ((level ?? 1) / 100);
+    const progressValue = (total ?? 0) / maxStatsRatio * 100;
 
     return <Table.Tr style={{
         borderTop: '1px solid var(--mantine-color-gray-3)',
@@ -29,6 +29,7 @@ export const UIDetailsStatsTotalRow: React.FC<UIDetailsStatsTotalRowProps> = ({ 
                 {t('total')}
             </Group>
         </Table.Th>
+        {total !== undefined && <>
         <Table.Td>
             <Progress
                 value={progressValue}
@@ -39,6 +40,7 @@ export const UIDetailsStatsTotalRow: React.FC<UIDetailsStatsTotalRowProps> = ({ 
         <Table.Td>
             <NumberFormatter value={total} />
         </Table.Td>
+        </>}
         {iv !== undefined && maxIv !== undefined && <Table.Td>
             <Box className={classes.ivEv}>
                 {iv}

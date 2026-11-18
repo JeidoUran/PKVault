@@ -4,13 +4,14 @@ import classes from './ui-details-content-stats.module.css';
 import { useTranslate } from '../../../../../translate/i18n';
 
 export type UIDetailsContentStatsProps = {
+    values?: boolean;
     iv?: boolean;
     ev?: boolean;
     asDv?: boolean;
     children: React.ReactNode;
 };
 
-export const UIDetailsContentStats: React.FC<UIDetailsContentStatsProps> = ({ iv, ev, asDv, children }) => {
+export const UIDetailsContentStats: React.FC<UIDetailsContentStatsProps> = ({ values = true, iv, ev, asDv, children }) => {
     const { t } = useTranslate();
 
     return <Table
@@ -22,7 +23,7 @@ export const UIDetailsContentStats: React.FC<UIDetailsContentStatsProps> = ({ iv
         <Table.Thead>
             <Table.Tr>
                 <Table.Th></Table.Th>
-                <Table.Th colSpan={2} ta='center'>{t('details.stats.stat')}</Table.Th>
+                {values && <Table.Th colSpan={2} ta='center'>{t('details.stats.stat')}</Table.Th> }
                 {iv && <Table.Th ta='center'>
                     {asDv ? t('details.stats.ivs.dv') : t('details.stats.ivs.iv')}
                 </Table.Th>}

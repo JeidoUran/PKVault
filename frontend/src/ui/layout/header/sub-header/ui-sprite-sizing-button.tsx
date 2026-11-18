@@ -26,6 +26,7 @@ export const UISpriteSizingButton: React.FC<UISpriteSizingButtonProps> = ({ loca
     const label = switchUtil(localStorageKey, {
         'storage-sprite-size': t('header.sub.sprite-sizing.storage'),
         'pokedex-sprite-size': t('header.sub.sprite-sizing.dex'),
+        'home-sprite-size': t('home.sprite-sizing'),
     });
 
     if (hidden)
@@ -85,6 +86,7 @@ const DropdownContent: React.FC<Pick<UISpriteSizingButtonProps, 'localStorageKey
                     {switchUtil(localStorageKey, {
                         'storage-sprite-size': t('header.sub.sprite-sizing.title.storage'),
                         'pokedex-sprite-size': t('header.sub.sprite-sizing.title.dex'),
+                        'home-sprite-size': t('home.sprite-sizing'),
                     })}
                 </Text>
             </Group>

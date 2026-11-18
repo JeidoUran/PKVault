@@ -30,7 +30,7 @@ export type UIDetailsMainProps = {
     teraType?: React.ReactNode;
     ball: React.ReactNode;
     nickname: string;
-    level: number;
+    level?: number;
     // eggHatchCount?: number;
     pokerusDays?: number;
     isPokerusCured?: boolean;
@@ -61,9 +61,9 @@ export const UIDetailsMain: React.FC<UIDetailsMainProps> = ({
                 <UIGender gender={gender} size='big' />
 
                 <Space ml='auto' />
-                <Text component='div' size='lg'>
+                {level !== undefined && <Text component='div' size='lg'>
                     <UIDetailsLevel level={level} showBar />
-                </Text>
+                </Text>}
             </Group>
 
             <Group wrap='nowrap'>

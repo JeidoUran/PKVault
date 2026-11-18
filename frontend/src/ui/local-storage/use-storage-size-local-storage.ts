@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@mantine/hooks';
 
-export type SpriteSizeLocalStorageKey = 'storage-sprite-size' | 'pokedex-sprite-size';
+export type SpriteSizeLocalStorageKey = 'storage-sprite-size' | 'pokedex-sprite-size' | 'home-sprite-size';
 
 export const useSpriteSizeLocalStorage = (key: SpriteSizeLocalStorageKey) => {
   return useLocalStorage<number>({

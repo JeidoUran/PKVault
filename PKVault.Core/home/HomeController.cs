@@ -9,6 +9,8 @@ public class HomeController(HomeService home, ISessionService session)
     public HomeInventoryDTO GetSnapshot(string collectionId, string? snapshotId = null) => home.GetInventory(collectionId, snapshotId);
     [HttpGet("pokemon")]
     public HomePokemonDetailsDTO GetPokemon(string collectionId, string snapshotId, string entryId, string view = "core") => home.GetPokemon(collectionId, snapshotId, entryId, view);
+    [HttpGet("download")]
+    public CoreFileResponse Download(string collectionId, string? snapshotId = null) => home.Download(collectionId, snapshotId);
     [HttpPost("selection")]
     public HomeCollectionDTO Select(HomeSelectionInput input)
     {

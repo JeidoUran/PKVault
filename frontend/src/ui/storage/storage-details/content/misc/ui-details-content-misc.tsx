@@ -7,7 +7,7 @@ export type UIDetailsContentMiscProps = {
     eggHatchCount: number;
     friendship: number;
     language: string | undefined;
-    homeTracker?: number;
+    homeTracker?: number | string;
 };
 
 export const UIDetailsContentMisc: React.FC<UIDetailsContentMiscProps> = ({

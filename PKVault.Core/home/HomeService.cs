@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,7 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
     private readonly Dictionary<string, Snapshot> cache = new(StringComparer.Ordinal);
     private string SelectionPath => statePath ?? Path.Combine(SettingsService.AppDirectory, "config", "home-selection.json");
     private sealed record Entry(HomePokemonDTO DTO, HomeFile File, string Hash, string RelativePath, string BoxName, int BoxOrder);
-    private sealed record Snapshot(HomeSnapshotDTO DTO, Entry[] Entries);
+    private sealed record Snapshot(HomeSnapshotDTO DTO, Entry[] Entries, byte[]? Manifest = null);
     private sealed record Collection(string Id, string Name, string Root, uint SourceId);
     private static readonly Dictionary<string, (HomeGameDataFormat Format, string Label)> Views = new()
     {
@@ -25,6 +26,44 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
         ["PA9"] = (HomeGameDataFormat.PA9, "Légendes Z-A"),
         ["PC9"] = (HomeGameDataFormat.PC9, "Champions — bloc brut")
     };
+    private static readonly System.Reflection.PropertyInfo[] CoreRibbonProperties = typeof(GameDataCore).GetProperties()
+        .Where(p => p.Name.StartsWith(RibbonInfo.PropertyPrefix, StringComparison.Ordinal)
+            && (p.PropertyType == typeof(bool) || p.PropertyType == typeof(byte)))
+        .ToArray();
+
+    // A catalogue entry identifies the form and its growth rate even for a core-only export.
+    private static readonly (HomeGameDataFormat Format, EntityContext Context, IPersonalTable Table)[] DisplayTables =
+    [
+        (HomeGameDataFormat.PK9, EntityContext.Gen9, PersonalTable.SV),
+        (HomeGameDataFormat.PA9, EntityContext.Gen9a, PersonalTable.ZA),
+        (HomeGameDataFormat.PK8, EntityContext.Gen8, PersonalTable.SWSH),
+        (HomeGameDataFormat.PB8, EntityContext.Gen8b, PersonalTable.BDSP),
+        (HomeGameDataFormat.PA8, EntityContext.Gen8a, PersonalTable.LA),
+        (HomeGameDataFormat.PB7, EntityContext.Gen7b, PersonalTable.GG),
+        (HomeGameDataFormat.None, EntityContext.Gen7, PersonalTable.USUM),
+    ];
+
+    private static (EntityContext Context, PersonalInfo? Personal) GetDisplayInfo(HomeFile file, PKH entity)
+    {
+        var species = entity.Species;
+        var form = entity.Form;
+        foreach (var (format, context, table) in DisplayTables)
+        {
+            if (file.HasFormat(format) && table.IsPresentInGame(species, form))
+                return (context, table.GetFormEntry(species, form));
+        }
+        foreach (var (_, context, table) in DisplayTables)
+        {
+            if (table.IsPresentInGame(species, form))
+                return (context, table.GetFormEntry(species, form));
+        }
+        foreach (var (_, context, table) in DisplayTables)
+        {
+            if (table.IsSpeciesInGame(species))
+                return (context, table.GetFormEntry(species, 0));
+        }
+        return (EntityContext.Gen9a, null);
+    }
 
     public void ClearCache() { lock (gate) cache.Clear(); }
     public HomeCollectionDTO[] GetCollections()
@@ -111,19 +150,73 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
                     : entry.File.CreateGameEntity(v.Format, allowReconstruction: false)
                         ?? throw new InvalidDataException("Projection indisponible pour ce bloc.");
             }
-            bool isGame = entity is not PKH;
-            int[] ivs = [entity.IV_HP, entity.IV_ATK, entity.IV_DEF, entity.IV_SPA, entity.IV_SPD, entity.IV_SPE];
-            int[] evs = [entity.EV_HP, entity.EV_ATK, entity.EV_DEF, entity.EV_SPA, entity.EV_SPD, entity.EV_SPE];
+            var game = entity is PKH ? null : new ImmutablePKM(entity);
+            var pkm = game ?? new ImmutablePKM(home);
+            var (spriteContext, personal) = GetDisplayInfo(entry.File, home);
+            var context = game?.Context;
             return new(entry.DTO.Id, entry.Hash, entry.RelativePath, entry.DTO.Views,
                 new(view, label, projection, entity.Context, entity.Species, entity.Form,
-                    home.Nickname, home.Gender, home.IsShiny, isGame ? entity.CurrentLevel : null,
-                    home.OriginalTrainerName, home.TID16, home.SID16, home.Version, home.Language,
-                    entry.DTO.Tracker, home.PID, entity.Nature.ToString(), ivs, evs,
-                    isGame ? entity.Ability : null,
-                    isGame ? [entity.Move1, entity.Move2, entity.Move3, entity.Move4] : null,
-                    isGame ? entity.HeldItem : null,
-                    isGame ? entity.MetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : null,
-                    isGame ? entity.MetLocation : null, Convert.ToHexString(block)));
+                    pkm.Nickname, (byte)pkm.Gender, pkm.IsShiny, game?.CurrentLevel ?? entry.DTO.Level,
+                    pkm.OriginTrainerName, entity.TID16, entity.SID16, pkm.Version, entity.Language,
+                    entry.DTO.Tracker, entity.PID, pkm.Nature.ToString(), pkm.IVs, pkm.EVs,
+                    game?.Ability, game?.Moves.ToArray(), game?.HeldItem,
+                    pkm.OriginMetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    game?.MetLocation, Convert.ToHexString(block),
+                    context ?? spriteContext,
+                    context.HasValue ? (entity.Version.Context == context.Value ? entity.Version : context.Value.GetSingleGameVersion()) : null,
+                    game?.Types ?? (personal == null ? [] : DexGenService.GetTypes(spriteContext.Generation, personal)),
+                    game?.TeraType,
+                    game == null ? null : PokeApiFromPKHeX.GetBallPokeApiId((Ball)game.Ball),
+                    game?.IsAlpha ?? false, game?.CanGigantamax ?? false, game?.IsAbilityHidden,
+                    pkm.Markings, game?.Stats, game?.RelearnMoves, game?.AlphaMove,
+                    game == null ? ReadCoreRibbons(home.Core) : game.Ribbons,
+                    pkm.Contest, pkm.Friendship, pkm.EggHatchCount,
+                    pkm.OriginTrainerGender, pkm.HandlingTrainerName, pkm.HandlingTrainerGender,
+                    pkm.FatefulEncounter, pkm.OriginMetLevel,
+                    game?.GetOriginMetLocation(settingsService.GetSettings().GetLanguageForPKHeX()),
+                    pkm.TID, pkm.SID));
+        }
+    }
+
+    private static Dictionary<string, byte> ReadCoreRibbons(GameDataCore core)
+    {
+        return CoreRibbonProperties.Select(p => (p.Name, Count: p.GetValue(core) switch
+        {
+            true => (byte)1,
+            byte count => count,
+            _ => (byte)0,
+        })).Where(p => p.Count > 0).ToDictionary(p => p.Name, p => p.Count);
+    }
+
+    public CoreFileResponse Download(string collectionId, string? snapshotId)
+    {
+        Snapshot snapshot;
+        lock (gate)
+            (_, snapshot) = Resolve(collectionId, snapshotId);
+
+        var manifestBytes = snapshot.Manifest ?? throw new InvalidDataException("Manifeste HOME absent.");
+        const string contentType = "application/zip";
+        var output = new MemoryStream();
+        try
+        {
+            using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                using (var manifest = archive.CreateEntry("manifest-sha256.json", CompressionLevel.Fastest).Open())
+                    manifest.Write(manifestBytes);
+                foreach (var entry in snapshot.Entries)
+                {
+                    using var file = archive.CreateEntry(entry.RelativePath.Replace('\\', '/'), CompressionLevel.Fastest).Open();
+                    file.Write(entry.File.GetOriginalData());
+                }
+            }
+            output.Position = 0;
+            return new(new(output, contentType, $"pokemon-home-{collectionId}-{snapshot.DTO.Id}.zip"),
+                200, contentType, []);
+        }
+        catch
+        {
+            output.Dispose();
+            throw;
         }
     }
 
@@ -219,7 +312,7 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
         foreach (var dir in Directory.EnumerateDirectories(collection.Root).Order(StringComparer.Ordinal))
         {
             if (!File.Exists(Path.Combine(dir, "manifest-sha256.json"))) continue;
-            try { snapshots.Add(LoadSnapshot(collection, dir)); }
+            try { snapshots.Add(LoadSnapshot(dir)); }
             catch (Exception ex) when (ex is InvalidDataException or IOException or JsonException or UnauthorizedAccessException or ArgumentException or KeyNotFoundException or InvalidOperationException)
             {
                 snapshots.Add(new(new(Path.GetFileName(dir), Path.GetFileName(dir), null, "unknown", false,
@@ -229,7 +322,7 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
         return snapshots.OrderByDescending(s => s.DTO.CapturedAt, StringComparer.Ordinal)
             .ThenByDescending(s => s.DTO.Id, StringComparer.Ordinal).ToArray();
     }
-    private Snapshot LoadSnapshot(Collection collection, string directory)
+    private Snapshot LoadSnapshot(string directory)
     {
         var manifestPath = SafePath(directory, "manifest-sha256.json");
         var raw = File.ReadAllBytes(manifestPath);
@@ -253,7 +346,7 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
             var info = new FileInfo(path);
             if (!info.Exists || info.Length > 0x330 || info.Length != file.GetProperty("bytes").GetInt64()) throw new InvalidDataException("Fichier HOME absent ou de taille incorrecte : " + relative);
         }
-        var key = directory;
+        var boxCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var entries = new List<Entry>();
         bool exact = files.Length > 0 && files.All(f => f.TryGetProperty("slot_index", out _) && f.TryGetProperty("box_index", out _));
         var usedSlots = new HashSet<(string, int)>();
@@ -265,7 +358,7 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
             if (!hash.Equals(file.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Empreinte HOME incorrecte : " + relative);
             if (!HomeFile.TryCreate(data, out var home)) throw new InvalidDataException("Fichier HOME invalide : " + relative);
             var entity = home.CreateEntity();
-            var projection = home.CreateProjection();
+            var (context, personal) = GetDisplayInfo(home, entity);
             var box = Path.GetDirectoryName(relative)?.Replace('\\', '/') ?? "HOME";
             var boxName = file.TryGetProperty("box_name", out var bname) ? bname.GetString() ?? box : box;
             int order = file.TryGetProperty("box_index", out var index) ? index.GetInt32() : ExtractBoxOrder(box);
@@ -275,11 +368,14 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
             var id = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(relative))).ToLowerInvariant();
             var tracker = entity.Tracker.ToString("X16", CultureInfo.InvariantCulture);
             var views = new[] { "core" }.Concat(home.AvailableFormats.ToArray().Select(f => f.ToString()).Where(Views.ContainsKey)).ToArray();
-            entries.Add(new(new(id, box, slot ?? entries.Count(e => e.DTO.Box == box), slot,
+            int boxCount = boxCounts.GetValueOrDefault(box);
+            if (boxCount == 30) throw new InvalidDataException("Plus de 30 Pokémon dans une boîte HOME.");
+            boxCounts[box] = boxCount + 1;
+            byte? level = personal == null ? null : Experience.GetLevel(entity.EXP, personal.EXPGrowth);
+            entries.Add(new(new(id, box, slot ?? boxCount, slot,
                 entity.Species, entity.Form, entity.Nickname, entity.Gender, entity.IsShiny, entity.IsEgg,
-                tracker, projection?.Context ?? EntityContext.Gen9a, views), home, hash.ToLowerInvariant(), relative, boxName, order));
+                tracker, context, views, level), home, hash.ToLowerInvariant(), relative, boxName, order));
         }
-        if (entries.GroupBy(e => e.DTO.Box).Any(g => g.Count() > 30)) throw new InvalidDataException("Plus de 30 Pokémon dans une boîte HOME.");
         var snapshotId = Path.GetFileName(directory);
         string? captured = null;
         string precision = "unknown";
@@ -288,9 +384,9 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
         else if (DateTimeOffset.TryParseExact(snapshotId, "yyyy-MM-dd'T'HHmmss'Z'", CultureInfo.InvariantCulture,
             DateTimeStyles.AssumeUniversal, out var moment)) { captured = moment.ToUniversalTime().ToString("O"); precision = "second"; }
         var dto = new HomeSnapshotDTO(snapshotId, captured ?? snapshotId, captured, precision, true, null,
-            entries.Count, entries.Select(e => e.DTO.Box).Distinct().Count(), entries.Count(e => e.DTO.IsShiny),
-            entries.Where(e => !e.DTO.IsEgg).Select(e => e.DTO.Species).Distinct().Count(), exact, stamp);
-        return cache[key] = new(dto, entries.ToArray());
+            entries.Count, boxCounts.Count, entries.Count(e => e.DTO.IsShiny),
+            entries.Where(e => !e.DTO.IsEgg).Select(e => e.DTO.Species).Distinct().Count(), exact, stamp, FileIOService.NormalizePath(directory));
+        return cache[directory] = new(dto, entries.ToArray(), raw);
     }
     private Dictionary<string, string> ReadSelections() => File.Exists(SelectionPath)
         ? JsonSerializer.Deserialize(File.ReadAllText(SelectionPath), HomeJsonContext.Default.DictionaryStringString) ?? [] : [];
@@ -307,7 +403,8 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
     }
     internal static string SafePath(string root, string relative)
     {
-        if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative) || relative.Contains(':')) throw new InvalidDataException("Chemin de fichier HOME invalide.");
+        if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative) || relative.Contains(':')
+            || relative.Split('/', '\\').Any(component => component is "" or "." or "..")) throw new InvalidDataException("Chemin de fichier HOME invalide.");
         var fullRoot = Path.GetFullPath(root);
         var path = Path.GetFullPath(Path.Combine(fullRoot, relative));
         if (!path.StartsWith(fullRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Le chemin HOME sort de son instantané.");

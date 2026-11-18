@@ -323,6 +323,47 @@
         }
       }
     },
+    "/api/home/download": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "operationId": "Home_Download",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "snapshotId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/home/pokemon": {
       "get": {
         "tags": [
@@ -4928,6 +4969,9 @@
           },
           "fingerprint": {
             "type": "string"
+          },
+          "path": {
+            "type": "string"
           }
         }
       },
@@ -4984,7 +5028,18 @@
           "pid",
           "nature",
           "iVs",
-          "blockHex"
+          "blockHex",
+          "spriteContext",
+          "types",
+          "isAlpha",
+          "canGigantamax",
+          "friendship",
+          "eggHatchCount",
+          "originalTrainerGender",
+          "handlingTrainer",
+          "handlingTrainerGender",
+          "fatefulEncounter",
+          "displayTid"
         ],
         "properties": {
           "key": {
@@ -5082,6 +5137,105 @@
           },
           "blockHex": {
             "type": "string"
+          },
+          "spriteContext": {
+            "$ref": "#/components/schemas/EntityContext"
+          },
+          "contextVersion": {
+            "$ref": "#/components/schemas/GameVersion"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "byte"
+            }
+          },
+          "teraType": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "ball": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAlpha": {
+            "type": "boolean"
+          },
+          "canGigantamax": {
+            "type": "boolean"
+          },
+          "isAbilityHidden": {
+            "type": "boolean"
+          },
+          "markings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarkingColorUniversal"
+            }
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "relearnMoves": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "alphaMove": {
+            "type": "integer"
+          },
+          "ribbons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "byte"
+            }
+          },
+          "contest": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "friendship": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "eggHatchCount": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "originalTrainerGender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "handlingTrainer": {
+            "type": "string"
+          },
+          "handlingTrainerGender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "fatefulEncounter": {
+            "type": "boolean"
+          },
+          "metLevel": {
+            "type": "integer",
+            "format": "byte"
+          },
+          "metLocationName": {
+            "type": "string"
+          },
+          "displayTid": {
+            "type": "integer"
+          },
+          "displaySid": {
+            "type": "integer"
           }
         }
       },
@@ -5223,6 +5377,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "level": {
+            "type": "integer",
+            "format": "byte"
           }
         }
       },

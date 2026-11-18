@@ -1,9 +1,10 @@
-import { EmptyState, Group } from '@mantine/core';
+import { EmptyState } from '@mantine/core';
 import { PackageOpenIcon } from 'lucide-react';
 import React from 'react';
 import { usePkmIndex } from '../../../data/hooks/use-pkm-index';
 import { useTranslate } from '../../../translate/i18n';
 import { useSelectContext, useSelectContextActions } from '../../../ui/interaction/select/context/use-select-context';
+import { UIStorageBoxGrid } from '../../../ui/storage/storage-panel/ui-storage-box-grid';
 import { getBoxColumns } from '../../../ui/storage/storage-panel/get-box-columns';
 import { filterIsDefined } from '../../../util/filter-is-defined';
 import { useSelectCallback } from '../../../util/use-select-callback';
@@ -139,19 +140,7 @@ export const StoragePanelItems: React.FC = () => {
 
     const cols = getBoxColumns(items.length);
 
-    return <Group
-        gap='sm'
-        wrap='wrap'
-        mx='auto'
-        pos='relative'
-        w='fit-content'
-        style={cols
-            ? {
-                display: 'grid',
-                gridTemplateColumns: `repeat(${cols}, 1fr)`,
-            }
-            : undefined}
-    >
+    return <UIStorageBoxGrid columns={cols ?? 0}>
         {items}
 
         {!isPending && emptyBox && <EmptyState
@@ -166,5 +155,5 @@ export const StoragePanelItems: React.FC = () => {
                 pointerEvents: 'none',
             }}
         />}
-    </Group>
+    </UIStorageBoxGrid>
 };

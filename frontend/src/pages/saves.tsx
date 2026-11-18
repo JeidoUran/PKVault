@@ -1,13 +1,14 @@
-import { HomeSummary } from '../home/home-summary';
-import { Badge, Button, Card, Divider, EmptyState, Group, Tooltip } from '@mantine/core';
+import { Alert, Badge, Button, Card, Divider, EmptyState, Group, Tooltip } from '@mantine/core';
 import { DownloadIcon, FolderIcon, FolderSearchIcon, PackageOpenIcon, TrashIcon, TriangleAlertIcon } from 'lucide-react';
 import type React from "react";
 import { HistoryContext } from '../context/history-context';
 import { getApiFullUrl } from '../data/mutator/custom-instance';
+import { useHomeGetAll } from '../data/sdk/home/home.gen';
 import { DesktopMessageType } from '../data/sdk/model';
 import { getSaveInfosDownloadUrl, useSaveInfosDelete, useSaveInfosGetAll } from '../data/sdk/save-infos/save-infos.gen';
 import { useSettingsGet } from '../data/sdk/settings/settings.gen';
 import { withErrorCatcher } from '../error/with-error-catcher';
+import { HomeSaveCard } from '../home/home-summary';
 import { useStaticData } from '../hooks/use-static-data';
 import { getGameInfos } from '../pokedex/details/util/get-game-infos';
 import { Route } from '../routes/saves';
@@ -32,6 +33,8 @@ export const SavesPage: React.FC = withErrorCatcher('default', () => {
 
   const staticData = useStaticData();
   const saveInfosQuery = useSaveInfosGetAll();
+  const homeQuery = useHomeGetAll();
+  const collections = homeQuery.data?.data ?? [];
   const saveDeleteMutation = useSaveInfosDelete();
 
   const settingsQuery = useSettingsGet();
@@ -156,7 +159,17 @@ export const SavesPage: React.FC = withErrorCatcher('default', () => {
         ];
       })}
 
-      <HomeSummary />
+      {homeQuery.isError && <Alert color='red'>{t('home.error')}</Alert>}
+      {!!collections.length && [
+        <Card.Section key='home-title' inheritPadding withBorder>
+          <Group py='sm'>Pokémon HOME</Group>
+        </Card.Section>,
+        <Card.Section key='home-cards' inheritPadding withBorder py='inherit'>
+          <Group>
+            {collections.map(collection => <HomeSaveCard key={collection.id} collection={collection} />)}
+          </Group>
+        </Card.Section>,
+      ]}
 
       <Card.Section inheritPadding withBorder py='inherit'>
         <Group justify='center'>
