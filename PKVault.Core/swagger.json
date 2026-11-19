@@ -1590,6 +1590,50 @@
         }
       }
     },
+    "/api/storage/pkm/encounter": {
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "operationId": "Storage_GetPkmEncounter",
+        "parameters": [
+          {
+            "name": "pkmId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "saveId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/storage/pkm/evolve": {
       "put": {
         "tags": [
@@ -5039,7 +5083,8 @@
           "handlingTrainer",
           "handlingTrainerGender",
           "fatefulEncounter",
-          "displayTid"
+          "displayTid",
+          "encounterAnalysis"
         ],
         "properties": {
           "key": {
@@ -5236,6 +5281,12 @@
           },
           "displaySid": {
             "type": "integer"
+          },
+          "encounterAnalysis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

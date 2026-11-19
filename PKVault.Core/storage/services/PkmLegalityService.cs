@@ -67,6 +67,34 @@ public class PkmLegalityService(ISettingsService settingsService, ILegalityAnaly
         );
     }
 
+    public List<string> GetEncounterSummary(PkmSaveDTO pkmSave) =>
+        GetEncounterSummary(pkmSave.Pkm, pkmSave.Save, GetPkmStorageType(pkmSave));
+
+    public List<string> GetEncounterSummary(ImmutablePKM pkm, SaveWrapper? save = null,
+        StorageSlotType slotType = StorageSlotType.None)
+    {
+        if (!pkm.IsEnabled)
+            return [];
+
+        try
+        {
+            var analysis = legalityAnalysisService.GetLegalitySafe(pkm, save, slotType).la;
+            if (analysis is not { Parsed: true } || analysis.EncounterOriginal is EncounterInvalid)
+                return [];
+
+            var language = settingsService.GetSettings().GetLanguageForPKHeX();
+            var localizer = LegalityLocalizationContext.Create(analysis, language);
+            var lines = new List<string>();
+            LegalityFormatting.AddEncounterInfo(localizer, lines);
+            return lines;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not read the PKHeX encounter summary.");
+            return [];
+        }
+    }
+
     private StorageSlotType GetPkmStorageType(PkmSaveDTO pkmSave)
     {
         var slotType = pkmSave.BoxId switch

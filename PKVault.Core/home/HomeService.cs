@@ -8,7 +8,7 @@ using PKHeX.Core;
 namespace PKVault.Core;
 
 /// <summary>Reads declared HOME snapshots. Original bytes never enter PKVault's editing/storage loaders.</summary>
-public sealed class HomeService(ISettingsService settingsService, string? statePath = null)
+public sealed class HomeService(ISettingsService settingsService, PkmLegalityService pkmLegalityService, string? statePath = null)
 {
     private readonly object gate = new();
     private readonly Dictionary<string, Snapshot> cache = new(StringComparer.Ordinal);
@@ -125,57 +125,64 @@ public sealed class HomeService(ISettingsService settingsService, string? stateP
 
     public HomePokemonDetailsDTO GetPokemon(string collectionId, string snapshotId, string entryId, string view)
     {
+        Entry entry;
         lock (gate)
         {
             var (_, snapshot) = Resolve(collectionId, snapshotId);
-            var entry = snapshot.Entries.FirstOrDefault(e => e.DTO.Id == entryId)
+            entry = snapshot.Entries.FirstOrDefault(e => e.DTO.Id == entryId)
                 ?? throw new KeyNotFoundException("Pokémon absent de cet instantané.");
-            var home = entry.File.CreateEntity();
-            PKM entity = home;
-            byte[] block;
-            string label;
-            bool projection = view != "core";
-            if (view == "core")
-            {
-                block = entry.File.GetBlockBytes(HomeGameDataFormat.None);
-                label = "HOME — données communes";
-            }
-            else
-            {
-                if (!Views.TryGetValue(view, out var v) || !entry.File.HasFormat(v.Format))
-                    throw new ArgumentException("Ce bloc de jeu n'est pas présent dans le fichier HOME.");
-                label = v.Label;
-                block = entry.File.GetBlockBytes(v.Format);
-                entity = v.Format == HomeGameDataFormat.PC9 ? home
-                    : entry.File.CreateGameEntity(v.Format, allowReconstruction: false)
-                        ?? throw new InvalidDataException("Projection indisponible pour ce bloc.");
-            }
-            var game = entity is PKH ? null : new ImmutablePKM(entity);
-            var pkm = game ?? new ImmutablePKM(home);
-            var (spriteContext, personal) = GetDisplayInfo(entry.File, home);
-            var context = game?.Context;
-            return new(entry.DTO.Id, entry.Hash, entry.RelativePath, entry.DTO.Views,
-                new(view, label, projection, entity.Context, entity.Species, entity.Form,
-                    pkm.Nickname, (byte)pkm.Gender, pkm.IsShiny, game?.CurrentLevel ?? entry.DTO.Level,
-                    pkm.OriginTrainerName, entity.TID16, entity.SID16, pkm.Version, entity.Language,
-                    entry.DTO.Tracker, entity.PID, pkm.Nature.ToString(), pkm.IVs, pkm.EVs,
-                    game?.Ability, game?.Moves.ToArray(), game?.HeldItem,
-                    pkm.OriginMetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    game?.MetLocation, Convert.ToHexString(block),
-                    context ?? spriteContext,
-                    context.HasValue ? (entity.Version.Context == context.Value ? entity.Version : context.Value.GetSingleGameVersion()) : null,
-                    game?.Types ?? (personal == null ? [] : DexGenService.GetTypes(spriteContext.Generation, personal)),
-                    game?.TeraType,
-                    game == null ? null : PokeApiFromPKHeX.GetBallPokeApiId((Ball)game.Ball),
-                    game?.IsAlpha ?? false, game?.CanGigantamax ?? false, game?.IsAbilityHidden,
-                    pkm.Markings, game?.Stats, game?.RelearnMoves, game?.AlphaMove,
-                    game == null ? ReadCoreRibbons(home.Core) : game.Ribbons,
-                    pkm.Contest, pkm.Friendship, pkm.EggHatchCount,
-                    pkm.OriginTrainerGender, pkm.HandlingTrainerName, pkm.HandlingTrainerGender,
-                    pkm.FatefulEncounter, pkm.OriginMetLevel,
-                    game?.GetOriginMetLocation(settingsService.GetSettings().GetLanguageForPKHeX()),
-                    pkm.TID, pkm.SID));
         }
+
+        var home = entry.File.CreateEntity();
+        PKM entity = home;
+        byte[] block;
+        string label;
+        bool projection = view != "core";
+        if (view == "core")
+        {
+            block = entry.File.GetBlockBytes(HomeGameDataFormat.None);
+            label = "HOME — données communes";
+        }
+        else
+        {
+            if (!Views.TryGetValue(view, out var v) || !entry.File.HasFormat(v.Format))
+                throw new ArgumentException("Ce bloc de jeu n'est pas présent dans le fichier HOME.");
+            label = v.Label;
+            block = entry.File.GetBlockBytes(v.Format);
+            entity = v.Format == HomeGameDataFormat.PC9 ? home
+                : entry.File.CreateGameEntity(v.Format, allowReconstruction: false)
+                    ?? throw new InvalidDataException("Projection indisponible pour ce bloc.");
+        }
+        var game = entity is PKH ? null : new ImmutablePKM(entity);
+        var pkm = game ?? new ImmutablePKM(home);
+        // Only a game block present in this snapshot can supply encounter data.
+        var encounterPkm = game ?? (view == "core" && entry.File.CreateProjection() is { } recorded
+            ? new ImmutablePKM(recorded)
+            : null);
+        var language = settingsService.GetSettings().GetLanguageForPKHeX();
+        var (spriteContext, personal) = GetDisplayInfo(entry.File, home);
+        var context = game?.Context;
+        return new(entry.DTO.Id, entry.Hash, entry.RelativePath, entry.DTO.Views,
+            new(view, label, projection, entity.Context, entity.Species, entity.Form,
+                pkm.Nickname, (byte)pkm.Gender, pkm.IsShiny, game?.CurrentLevel ?? entry.DTO.Level,
+                pkm.OriginTrainerName, entity.TID16, entity.SID16, pkm.Version, entity.Language,
+                entry.DTO.Tracker, entity.PID, pkm.Nature.ToString(), pkm.IVs, pkm.EVs,
+                game?.Ability, game?.Moves.ToArray(), game?.HeldItem,
+                pkm.OriginMetDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                encounterPkm?.MetLocation, Convert.ToHexString(block),
+                context ?? spriteContext,
+                context.HasValue ? (entity.Version.Context == context.Value ? entity.Version : context.Value.GetSingleGameVersion()) : null,
+                game?.Types ?? (personal == null ? [] : DexGenService.GetTypes(spriteContext.Generation, personal)),
+                game?.TeraType,
+                game == null ? null : PokeApiFromPKHeX.GetBallPokeApiId((Ball)game.Ball),
+                game?.IsAlpha ?? false, game?.CanGigantamax ?? false, game?.IsAbilityHidden,
+                pkm.Markings, game?.Stats, game?.RelearnMoves, game?.AlphaMove,
+                game == null ? ReadCoreRibbons(home.Core) : game.Ribbons,
+                pkm.Contest, pkm.Friendship, pkm.EggHatchCount,
+                pkm.OriginTrainerGender, pkm.HandlingTrainerName, pkm.HandlingTrainerGender,
+                pkm.FatefulEncounter, encounterPkm?.OriginMetLevel ?? pkm.OriginMetLevel,
+                encounterPkm?.GetOriginMetLocation(language),
+                pkm.TID, pkm.SID, encounterPkm == null ? [] : pkmLegalityService.GetEncounterSummary(encounterPkm)));
     }
 
     private static Dictionary<string, byte> ReadCoreRibbons(GameDataCore core)

@@ -8,10 +8,12 @@ export type UIRibbonProps = {
 };
 
 export const UIRibbon: React.FC<UIRibbonProps> = ({ spriteKey, name, count }) => {
-    return <Tooltip label={name + (count > 1 ? ` (${count})` : '')}>
+    const label = name + (count > 1 ? ` (${count})` : '');
+    return <Tooltip label={label}>
         <Box
             component='img'
             mah={30}
+            alt={label}
             src={`/imgs/ribbons/${spriteKey}.png`}
         />
     </Tooltip>;

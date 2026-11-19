@@ -131,13 +131,9 @@ public class StorageQueryService(
             {
                 pkmVariants.TryGetValue(id, out var pkmVariant);
 
-                var attachedSave = pkmVariant?.AttachedSaveId == null
-                    ? null
-                    : savesLoadersService.GetLoaders((uint)pkmVariant.AttachedSaveId)?.Save;
-
                 return (id, pkmVariant == null
                     ? null
-                    : await pkmLegalityService.CreateDTO(pkmVariant, await pkmVariantLoader.GetPKM(pkmVariant), attachedSave)
+                    : await pkmLegalityService.CreateDTO(pkmVariant, await pkmVariantLoader.GetPKM(pkmVariant), GetAttachedSave(pkmVariant))
                 );
             }
 
@@ -145,6 +141,25 @@ public class StorageQueryService(
             return (id, pkmSave == null ? null : pkmLegalityService.CreateDTO(pkmSave));
         }))).ToDictionary();
     }
+
+    public async Task<List<string>> GetPkmEncounter(string pkmId, uint? saveId)
+    {
+        if (saveId is uint id)
+        {
+            var pokemon = savesLoadersService.GetLoaders(id)?.Pkms.GetDto(pkmId);
+            return pokemon == null ? [] : pkmLegalityService.GetEncounterSummary(pokemon);
+        }
+
+        using var scope = sp.CreateScope();
+        var loader = scope.ServiceProvider.GetRequiredService<IPkmVariantLoader>();
+        var variant = await loader.GetEntity(pkmId);
+        return variant == null
+            ? []
+            : pkmLegalityService.GetEncounterSummary(await loader.GetPKM(variant), GetAttachedSave(variant));
+    }
+
+    private SaveWrapper? GetAttachedSave(PkmVariantEntity variant) =>
+        variant.AttachedSaveId is uint id ? savesLoadersService.GetLoaders(id)?.Save : null;
 
     public async Task<Dictionary<string, Tuple<string, string>>> GetMainPkmVariantDiff(string pkmVariantId)
     {

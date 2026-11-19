@@ -1,6 +1,6 @@
 import { Group, Stack } from '@mantine/core';
 import type React from 'react';
-import { GameVersion, type PkmLegalityDTO } from '../../data/sdk/model';
+import { EntityContext, GameVersion, type PkmLegalityDTO } from '../../data/sdk/model';
 import { useStaticData } from '../../hooks/use-static-data';
 import { ItemImg } from '../../img/item-img';
 import { useTranslate } from '../../translate/i18n';
@@ -29,10 +29,12 @@ type Props = {
     expanded: boolean;
     fluid?: boolean;
     issues?: React.ReactNode[];
+    encounterAnalysis?: string[];
+    ribbonContext?: EntityContext;
     storage?: { saveId: number | null; legality: PkmLegalityDTO };
 };
 
-export function PokemonDetailsContent({ pkm, expanded, fluid, issues, storage }: Props) {
+export function PokemonDetailsContent({ pkm, expanded, fluid, issues, storage, encounterAnalysis, ribbonContext = pkm.context }: Props) {
     const { t } = useTranslate();
     const data = useStaticData();
     const nature = pkm.nature == null ? undefined : data.natures[pkm.nature];
@@ -119,7 +121,7 @@ export function PokemonDetailsContent({ pkm, expanded, fluid, issues, storage }:
             content: <UIDetailsContentCosmetic
                 contest={pkm.contest?.map((value, i) => <UIContest key={i} index={i} value={value} />)}
                 ribbons={pkm.ribbons && Object.entries(pkm.ribbons).map(([ name, count ]) =>
-                    <Ribbon key={name} name={name} count={count} />
+                    <Ribbon key={name} name={name} count={count} context={ribbonContext} />
                 )}
             />,
         }] : []),
@@ -141,6 +143,7 @@ export function PokemonDetailsContent({ pkm, expanded, fluid, issues, storage }:
                 originMetLevel={pkm.originMetLevel}
                 originMetDate={pkm.originMetDate}
                 fatefulEncounter={pkm.fatefulEncounter}
+                encounterAnalysis={encounterAnalysis}
             />,
         },
         {

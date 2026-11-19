@@ -55,6 +55,10 @@ public class StorageController(DataService dataService, StorageQueryService stor
         return pkmsLegality!;
     }
 
+    [HttpGet("pkm/encounter")]
+    public Task<List<string>> GetPkmEncounter(string pkmId, uint? saveId) =>
+        storageQueryService.GetPkmEncounter(pkmId, saveId);
+
     [HttpGet("main/pkm-version/{pkmVariantId}/diff")]
     public async Task<Dictionary<string, Tuple<string, string>>> GetMainPkmVariantDiff(string pkmVariantId)
     {

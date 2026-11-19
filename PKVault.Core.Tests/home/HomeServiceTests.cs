@@ -19,7 +19,8 @@ public sealed class HomeServiceTests : IDisposable
             SourceProvider.GithubRelease, false, "test", "test", root, "", "test",
             new("test.db", [], [], root, root, true, true, HOME_PATHS: [root])));
         settingsService=settings.Object;
-        service = new HomeService(settingsService, Path.Combine(root, "state", "selection.json"));
+        var legalityService = new PkmLegalityService(settingsService, new LegalityAnalysisService(settingsService));
+        service = new HomeService(settingsService, legalityService, Path.Combine(root, "state", "selection.json"));
     }
 
     [Fact]
@@ -87,6 +88,8 @@ public sealed class HomeServiceTests : IDisposable
         Assert.Null(detail.View.Ball);
         Assert.Null(detail.View.Stats);
         Assert.Null(detail.View.Moves);
+        Assert.Null(detail.View.MetLocation);
+        Assert.Empty(detail.View.EncounterAnalysis);
         Assert.Equal((byte)1, detail.View.Ribbons?["RibbonBestFriends"]);
         Assert.Throws<ArgumentException>(() => service.GetPokemon("test-home", "2026-11-12", p.Id, "PK9"));
         Assert.Equal(original, File.ReadAllBytes(file));

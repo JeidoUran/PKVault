@@ -22,6 +22,7 @@ public record HomeViewDTO(string Key, string Label, bool IsProjection, EntityCon
     MarkingColorUniversal[]? Markings, int[]? Stats, List<ushort>? RelearnMoves, ushort? AlphaMove,
     Dictionary<string, byte>? Ribbons, int[]? Contest, byte Friendship, byte EggHatchCount,
     Gender OriginalTrainerGender, string HandlingTrainer, Gender HandlingTrainerGender,
-    bool FatefulEncounter, byte? MetLevel, string? MetLocationName, uint DisplayTid, uint? DisplaySid);
+    bool FatefulEncounter, byte? MetLevel, string? MetLocationName, uint DisplayTid, uint? DisplaySid,
+    List<string> EncounterAnalysis);
 public record HomePokemonDetailsDTO(string Id, string Sha256, string SourcePath, string[] AvailableViews, HomeViewDTO View);
 public record HomeSelectionInput(string CollectionId, string SnapshotId);

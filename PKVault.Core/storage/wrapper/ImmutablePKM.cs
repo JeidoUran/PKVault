@@ -261,8 +261,19 @@ public class ImmutablePKM(PKM Pkm, PKMLoadError? loadError = null)
     public DateOnly? OriginMetDate => Pkm.MetDate;
     public byte? OriginMetLevel => Pkm.MetLevel == 0 ? null : Pkm.MetLevel;
 
-    public string GetOriginMetLocation(string language) => GameInfo.GetStrings(language)
-        .GetLocationName(Pkm.WasEgg, Pkm.MetLocation, Pkm.Format, Pkm.Generation, Pkm.Version);
+    public string GetOriginMetLocation(string language)
+    {
+        // Transfers from generations 3 and 4 store locations from a newer table.
+        // For example, 30001 means Poké Transfer in Gen 5 and an NPC trade in Gen 6+.
+        byte locationGeneration = (Pkm.Generation, Pkm.Format) switch
+        {
+            (3, 4) => 4,
+            (3 or 4, >= 5) => 5,
+            _ => Pkm.Generation,
+        };
+        return GameInfo.GetStrings(language).GetLocationName(
+            isEggLocation: false, Pkm.MetLocation, Pkm.Format, locationGeneration, Pkm.Version);
+    }
 
     public ushort HeldItem => (ushort)Pkm.HeldItem;
 

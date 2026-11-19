@@ -1,4 +1,4 @@
-import { Grid, Group } from '@mantine/core';
+import { Divider, Grid, Group, Stack, Text } from '@mantine/core';
 import React from 'react';
 import { Gender } from '../../../../../data/sdk/model';
 import { useTranslate } from '../../../../../translate/i18n';
@@ -19,11 +19,12 @@ export type UIDetailsContentOriginProps = {
     originMetLevel?: number;
     originMetDate?: string;
     fatefulEncounter?: boolean;
+    encounterAnalysis?: string[];
 };
 
 export const UIDetailsContentOrigin: React.FC<UIDetailsContentOriginProps> = ({
     game, ot, otGender, ht, htGender, tid, sid,
-    originMetLocation, originMetLevel, originMetDate, fatefulEncounter,
+    originMetLocation, originMetLevel, originMetDate, fatefulEncounter, encounterAnalysis,
 }) => {
     const { t } = useTranslate();
 
@@ -86,5 +87,14 @@ export const UIDetailsContentOrigin: React.FC<UIDetailsContentOriginProps> = ({
                     {item}
                 </React.Fragment>)}
         </Grid.Col>
+        {!!encounterAnalysis?.length && <Grid.Col span={12}>
+            <Divider mb='sm' />
+            <Stack gap='xs'>
+                <Text fw={600}>{t('details.encounter')}</Text>
+                {encounterAnalysis.map((line, i) =>
+                    <Text key={i} size='sm' style={{ overflowWrap: 'anywhere' }}>{line}</Text>
+                )}
+            </Stack>
+        </Grid.Col>}
     </Grid>;
 };

@@ -6,6 +6,8 @@ import { usePkmIndex } from '../../data/hooks/use-pkm-index';
 import { usePkmLegality } from '../../data/hooks/use-pkm-legality';
 import { usePkmVariantAttach } from '../../data/hooks/use-pkm-variant-attach';
 import { PKMLoadError, type PkmSaveDTO, type PkmVariantDTO } from '../../data/sdk/model';
+import { useSettingsGet } from '../../data/sdk/settings/settings.gen';
+import { getStorageGetPkmEncounterQueryKey, useStorageGetPkmEncounter } from '../../data/sdk/storage/storage.gen';
 import { withErrorCatcher } from '../../error/with-error-catcher';
 import { Route } from '../../routes/storage';
 import { useTranslate } from '../../translate/i18n';
@@ -20,7 +22,7 @@ import { PokemonDetailsContent } from './pokemon-details-content';
 const isVariant = (pkm: PkmVariantDTO | PkmSaveDTO) => 'filepath' in pkm;
 
 export const DetailsContent: React.FC = withErrorCatcher('default', () => {
-    const { t } = useTranslate();
+    const { t, i18n } = useTranslate();
 
     const { expanded } = useStorageSelectExpanded();
 
@@ -30,6 +32,19 @@ export const DetailsContent: React.FC = withErrorCatcher('default', () => {
 
     const pkmIndexQuery = usePkmIndex(selectedSaveId, data => data.data.byId[ selectedId ?? '' ]);
     const pkm = pkmIndexQuery.data;
+    const skipLegality = useSettingsGet().data?.data.settingsMutable.skiP_LEGALITY_CHECKS;
+    const encounterParams = { pkmId: selectedId ?? '', saveId: selectedSaveId };
+    const encounterQuery = useStorageGetPkmEncounter(encounterParams, {
+        query: {
+            enabled: !!pkm?.isEnabled && skipLegality === false,
+            queryKey: [
+                ...getStorageGetPkmEncounterQueryKey(encounterParams),
+                pkm?.dynamicChecksum,
+                pkm && isVariant(pkm) ? pkm.attachedSaveId : undefined,
+                i18n.language,
+            ],
+        },
+    });
 
     const getPkmVariantAttach = usePkmVariantAttach();
 
@@ -125,6 +140,7 @@ export const DetailsContent: React.FC = withErrorCatcher('default', () => {
     return <PokemonDetailsContent
         pkm={pkm}
         expanded={expanded}
+        encounterAnalysis={skipLegality ? undefined : encounterQuery.data?.data}
         issues={issues.map((issue, i) => <React.Fragment key={i}>{issue}</React.Fragment>)}
         storage={{ saveId: selectedSaveId, legality: pkmLegality }}
     />;

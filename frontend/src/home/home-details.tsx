@@ -1,7 +1,8 @@
 import { Accordion, Alert, Card, Group, Loader, Stack, Tabs, Text } from '@mantine/core';
 import { useState } from 'react';
-import { useHomeGetPokemon } from '../data/sdk/home/home.gen';
+import { getHomeGetPokemonQueryKey, useHomeGetPokemon } from '../data/sdk/home/home.gen';
 import { EntityContext, Nature, type Gender, type HomePokemonDTO, type HomeViewDTO, type LanguageID } from '../data/sdk/model';
+import { useSettingsGet } from '../data/sdk/settings/settings.gen';
 import { PokemonDetailsContent } from '../storage/details/pokemon-details-content';
 import { PokemonDetailsMain } from '../storage/details/pokemon-details-main';
 import type { PokemonSummaryData } from '../storage/details/pokemon-summary-data';
@@ -73,10 +74,16 @@ function summaryData(pokemon: HomePokemonDTO, view: HomeViewDTO): PokemonSummary
 type Props = { collectionId: string; snapshotId: string; pokemon: HomePokemonDTO; boxName: string };
 
 export function HomeDetails({ collectionId, snapshotId, pokemon, boxName }: Props) {
-    const { t } = useTranslate();
+    const { t, i18n } = useTranslate();
     const [ preferredView, setPreferredView ] = useState('core');
     const view = pokemon.views.includes(preferredView) ? preferredView : 'core';
-    const query = useHomeGetPokemon({ collectionId, snapshotId, entryId: pokemon.id, view });
+    const skipLegality = useSettingsGet().data?.data.settingsMutable.skiP_LEGALITY_CHECKS;
+    const params = { collectionId, snapshotId, entryId: pokemon.id, view };
+    const query = useHomeGetPokemon(params, {
+        query: {
+            queryKey: [...getHomeGetPokemonQueryKey(params), i18n.language, skipLegality],
+        },
+    });
     const details = query.data?.data;
     const pkm = details && summaryData(pokemon, details.view);
 
@@ -100,7 +107,10 @@ export function HomeDetails({ collectionId, snapshotId, pokemon, boxName }: Prop
         {details && pkm && <Stack pt='md'>
             <div className='home-details-grid'>
                 <PokemonDetailsMain pkm={pkm} />
-                <PokemonDetailsContent pkm={pkm} expanded fluid />
+                <PokemonDetailsContent pkm={pkm} expanded fluid
+                    encounterAnalysis={details.view.encounterAnalysis}
+                    ribbonContext={details.view.contextVersion == null ? EntityContext.Gen9 : details.view.context}
+                />
             </div>
             <Accordion variant='contained' key={view === 'PC9' ? 'raw' : 'details'} defaultValue={view === 'PC9' ? 'source' : undefined}>
                 <Accordion.Item value='source'>
