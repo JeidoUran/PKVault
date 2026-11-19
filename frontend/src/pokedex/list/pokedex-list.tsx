@@ -12,9 +12,8 @@ import { UIPokedexMain } from '../../ui/pokedex/main/ui-pokedex-main';
 import type { PopoverTargetChildProps } from '../../ui/popover/target-open-popover';
 import { UISpeciesImgSkeleton } from '../../ui/sprite-img/species-img/ui-species-img-skeleton';
 import { UIGameImg } from '../../ui/sprite-img/ui-game-img';
-import { DexFormItem } from "./dex-item/dex-form-item";
 import { usePokedexItems } from "./hooks/use-pokedex-items";
-import { PokedexItem } from "./pokedex-item";
+import { GenerationItems, GenerationPlaceholder } from './pokedex-generation-items';
 
 export const PokedexList: React.FC<PopoverTargetChildProps> = withErrorCatcher("default", React.memo((popoverProps) => {
   const { t } = useTranslate();
@@ -39,7 +38,7 @@ export const PokedexList: React.FC<PopoverTargetChildProps> = withErrorCatcher("
   );
 
   React.useEffect(() => {
-    if (!itemsRef.current)
+    if (isPending || !itemsRef.current)
       return;
 
     const selectedItem = itemsRef.current.querySelector<HTMLElement>('[data-dex-item][data-selected="true"]');
@@ -49,7 +48,7 @@ export const PokedexList: React.FC<PopoverTargetChildProps> = withErrorCatcher("
       if (selectedItem.dataset.focusKey)
         setFocus(selectedItem.dataset.focusKey);
     }
-  }, []);
+  }, [ isPending ]);
 
   return <Stack h='100%' style={{ flexGrow: 1, overflow: 'hidden' }} {...popoverProps} ref={ref}>
     <UIPokedexMain mah='100%'>
@@ -79,7 +78,6 @@ export const PokedexList: React.FC<PopoverTargetChildProps> = withErrorCatcher("
         ownedCount,
         shinyCount,
         totalCount,
-        itemsCount,
       }, i) => [
           <Card.Section key={i} inheritPadding withBorder>
             <UIPokedexMainSectionHeader
@@ -100,19 +98,10 @@ export const PokedexList: React.FC<PopoverTargetChildProps> = withErrorCatcher("
             />
           </Card.Section>,
           <Card.Section key={i + 100} inheritPadding withBorder>
-            <UIPokedexMainSection isFirstSection={i === 0} minSpecies={minSpecies} maxSpecies={maxSpecies}>
-              {speciesInfos.map(({ species, speciesName, isSeen, itemsToRender }, i) => (
-                <PokedexItem
-                  key={species}
-                  species={species}
-                  speciesName={speciesName}
-                  isSeen={isSeen}
-                >
-                  {itemsToRender.map((item) => (
-                    <DexFormItem key={item.id} {...item} />
-                  ))}
-                </PokedexItem>
-              ))}
+            <UIPokedexMainSection isFirstSection={i === 0} minSpecies={minSpecies} maxSpecies={maxSpecies}
+              placeholder={<GenerationPlaceholder speciesInfos={speciesInfos} />}
+            >
+              <GenerationItems speciesInfos={speciesInfos} />
             </UIPokedexMainSection>
           </Card.Section>,
         ])}

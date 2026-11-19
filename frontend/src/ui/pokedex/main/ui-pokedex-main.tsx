@@ -45,7 +45,7 @@ export const UIPokedexMain: React.FC<UIPokedexMainProps> = ({ children, ...rest 
         <WithControlsIcons placement='out' icons={controlIcons('open')}
             {...rest}
         >
-            <Card mah='100%' pr={getScrollPadding('md')} style={{
+            <Card data-dex-scroll mah='100%' pr={getScrollPadding('md')} style={{
                 flexGrow: 1,
                 overflowY: 'auto',
                 scrollbarGutter: 'stable',

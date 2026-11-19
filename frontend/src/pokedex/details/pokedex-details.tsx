@@ -241,7 +241,7 @@ export const PokedexDetails: React.FC = () => {
     </>}
     content={expanded
       ? <UIDetailsContentExpanded content={content} />
-      : <UIDetailsContent content={content} />}
+      : <UIDetailsContent content={content} keepMounted={false} />}
     onClose={() => navigate({
       search: {
         selected: undefined,

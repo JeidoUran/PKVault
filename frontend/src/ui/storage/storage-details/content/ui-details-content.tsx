@@ -13,9 +13,10 @@ type DetailsContentItem = {
 
 export type UIDetailsContentProps = {
     content: DetailsContentItem[];
+    keepMounted?: boolean;
 };
 
-export const UIDetailsContent: React.FC<UIDetailsContentProps> = ({ content }) => {
+export const UIDetailsContent: React.FC<UIDetailsContentProps> = ({ content, keepMounted }) => {
     const parentScope = useFocusScopeContext();
     const scopeActive = Focus.useIsScopeActive(parentScope.scopeId);
 
@@ -37,7 +38,7 @@ export const UIDetailsContent: React.FC<UIDetailsContentProps> = ({ content }) =
         firstTab?.click();
     });
 
-    return <Tabs defaultValue={content[ 0 ]?.name} mah='100%' style={{
+    return <Tabs defaultValue={content[ 0 ]?.name} keepMounted={keepMounted} mah='100%' style={{
         display: 'flex',
         flexDirection: 'column',
     }}>

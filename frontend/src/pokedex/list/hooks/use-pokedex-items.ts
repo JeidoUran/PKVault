@@ -28,7 +28,7 @@ type Counts = {
     itemsCount: number;
 };
 
-type SpeciesInfos = {
+export type SpeciesInfos = {
     species: number;
     speciesName: string;
     itemsToRender: SpeciesFormItem[];
